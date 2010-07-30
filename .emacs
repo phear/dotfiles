@@ -13,12 +13,18 @@
 (menu-bar-mode 1)
 (require 'twittering-mode)
 (require 'zenburn)
+(require 'magit)
+
 (zenburn)
 
 (require 'smart-compile)
 
 (set-background-color "black")
 (set-foreground-color "white")
+
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
 
 (setq backup-directory-alist
       `((".*" . ,temporary-file-directory)))
@@ -68,6 +74,14 @@
 
 (transient-mark-mode)
 (autoload 'javascript-mode "javascript" nil t)
+
+;; {{{
+;; General look and feel.
+(setq default-frame-alist
+      '((top . 80) (left . 64)
+	(width . 75) (height . 40)
+	(cursor-type . box)))
+;; }}}
 
 (add-hook 'octave-mode-hook
 (lambda()
@@ -209,14 +223,109 @@
 
 ;; {{{
 ;; Slime mode
+
 (add-to-list 'load-path "~/elisp/slime/")
-    (setq inferior-lisp-program "/usr/bin/sbcl")
-    (require 'slime)
+(setq inferior-lisp-program "/usr/bin/sbcl")
+(require 'slime)
+
 (slime-setup '(
-   slime-parse slime-mrepl
-   slime-autodoc
-   slime-references
-   slime-fancy))
+	       slime-parse slime-mrepl
+			   slime-autodoc
+			   slime-references
+			   slime-fancy))
 
 ;; }}}
 
+;; {{{ 
+;; ERC stuff
+
+;; {{
+;;; ERC nick tracker.
+
+;; Only track my nick(s)
+
+(defadvice erc-track-find-face (around erc-track-find-face-promote-query activate)
+  (if (erc-query-buffer-p)
+      (setq ad-return-value (intern "erc-current-nick-face"))
+    ad-do-it))
+
+(setq erc-keywords '("phear" "phear_"))
+
+(setq erc-track-exclude-types '("JOIN" "NICK" "PART" "QUIT" "MODE"
+                                "324" "329" "332" "333" "353" "477"))
+
+;;
+;; }}
+
+;; {{
+;; Use libnotify
+
+(defun clean-message (s)
+  (setq s (replace-regexp-in-string "'" "&apos;"
+  (replace-regexp-in-string "\"" "&quot;"
+  (replace-regexp-in-string "&" "&"
+  (replace-regexp-in-string "<" "&lt;"
+  (replace-regexp-in-string ">" "&gt;" s)))))))
+
+(defun call-libnotify (matched-type nick msg)
+  (let* ((cmsg  (split-string (clean-message msg)))
+        (nick   (first (split-string nick "!")))
+        (msg    (mapconcat 'identity (rest cmsg) " ")))
+    (shell-command-to-string
+     (format "notify-send -t 5000 -u critical '%s says:' '%s'" nick msg))))
+
+(add-hook 'erc-text-matched-hook 'call-libnotify)
+
+;;
+;; }}
+
+;; {{
+;; ERC logging.
+
+(setq erc-log-channels-directory "~/.erc/logs/")
+(setq erc-save-buffer-on-part t)
+(defadvice save-buffers-kill-emacs (before save-logs (arg) activate)
+  (save-some-buffers t (lambda () (when (eq major-mode 'erc-mode) t))))
+
+;;
+;; }}
+
+'(erc-track-showcount nil)
+'(erc-track-switch-direction (quote importance))
+
+
+;; 
+;; }}}
+
+;; {{{
+;;
+
+(require 'flymake)
+
+;; I don't like the default colors :)
+(set-face-background 'flymake-errline "red4")
+(set-face-background 'flymake-warnline "dark slate blue")
+
+;; Invoke ruby with '-c' to get syntax checking
+(defun flymake-ruby-init ()
+  (let* ((temp-file   (flymake-init-create-temp-buffer-copy
+                       'flymake-create-temp-inplace))
+	 (local-file  (file-relative-name
+                       temp-file
+                       (file-name-directory buffer-file-name))))
+    (list "ruby" (list "-c" local-file))))
+
+(push '(".+\\.rb$" flymake-ruby-init) flymake-allowed-file-name-masks)
+(push '("Rakefile$" flymake-ruby-init) flymake-allowed-file-name-masks)
+
+(push '("^\\(.*\\):\\([0-9]+\\): \\(.*\\)$" 1 2 nil 3) flymake-err-line-patterns)
+
+(add-hook 'ruby-mode-hook
+          '(lambda ()
+
+	     ;; Don't want flymake mode for ruby regions in rhtml files and also on read only files
+	     (if (and (not (null buffer-file-name)) (file-writable-p buffer-file-name))
+		 (flymake-mode))
+	     ))
+;;
+;; }}}
