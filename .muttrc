@@ -1,16 +1,27 @@
-# Vital Anapnea variables! Do not change!
-set folder = '~/.maildir'
-set mbox = '~/.maildir/mbox'
-set record = '~/.maildir/sent'
-
-# Enter your own mutt customizations here
-
 # Send info
-set from = "dodge@anapnea.net"
-set realname = "dodge"
+set from = "phear@..."
+set realname = "phear"
+
+set imap_user = "phear"
+set imap_pass = "..."
+
+set smtp_url = "smtp://phear@.../"
+set smtp_pass = "..."
+set from = "phear@..."
+set realname = "phear"
+
+set folder = "imaps://..."
+set spoolfile = "+INBOX"
+set postponed="+Drafts"
+
+set header_cache=~/.mutt/cache/headers
+set message_cachedir=~/.mutt/cache/bodies
+set certificate_file=~/.mutt/certificates
+
+set move = no
 
 # Statusline
-set status_format="mutt-notify '%u' '%f' '-%r- %f [Msgs:%?M?%M/?%m%?n? 
+# set status_format="mutt-notify '%u' '%f' '-%r- %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?] %>  (%P)'|"
 
 # Don't display help
 set help="no"
@@ -19,7 +30,7 @@ set help="no"
 set tilde="yes"
 
 # Index format
-set index_format="%{%b %d}  %Z  %-25.25F  (%?l?%4l&%4c?)  %s%?E?%> %e/%E ?"
+ set index_format="%{%b %d} %Z %-25.25F (%?l?%4l&%4c?) %s%?E?%> %e/%E ?"
 
 # Immediately go to message edit when replying
 set fast_reply = yes
@@ -41,7 +52,8 @@ macro index \Cr "<tag-pattern>~N\n<tag-prefix><clear-flag>N" \
                 "Mark all new messages as read"
 
 # Mark message as spam
-macro index S "<copy-message>=Spam\ny<delete-message><sync-mailbox>y" \ "Mark a message as spam"
+macro index S "<copy-message>=Spam\ny<delete-message><sync-mailbox>y" \
+              "Mark a message as spam"
 
 # Split Window
 set pager_index_lines=15
@@ -58,7 +70,7 @@ set sort = 'threads'
 set sort_aux = 'last-date-received'
 
 # Batch headers
-my_hdr From: dodge@anapnea.net (dodge)
+my_hdr From: <phear@devio.us> (phear)
 set edit_headers
 
 # Editor
@@ -69,7 +81,7 @@ set sig_dashes = no
 set signature=~/.signature
 
 # Show only interesting headers
-ignore * unignore From To Cc Subject Date Reply-To Organization X-Mailer User-Agentunignore X-Spam-Flag X-Spam-Score
+ignore * unignore From To Cc Subject Date Reply-To Organization X-Mailer User-Agent unignore X-Spam-Flag X-Spam-Score
 
 # Don't ask to move
 set move = no
@@ -96,7 +108,7 @@ color signature brightred black
 color underline yellow black
 color header cyan black ^(From|Subject):
 color body magenta black "(ftp|http)://[^ ]+"
-color body magenta black [-a-z_0-9.]+@[-a-z_0-9.]+ 
+color body magenta black [-a-z_0-9.]+@[-a-z_0-9.]+
 
 color index brightyellow black ~N
 color index yellow black ~O
@@ -122,7 +134,7 @@ set pgp_list_secring_command="gpg --no-verbose --batch --with-colons --list-secr
 
 # specify the uid to use when encrypting/signing
 set pgp_autosign = yes
-set pgp_sign_as="dodge"
+set pgp_sign_as="phear"
 
 # this set the number of seconds to keep in memory the passpharse used to encrypt/sign
 # the more the less secure it will be
@@ -151,4 +163,14 @@ set crypt_replysignencrypted=yes
 set crypt_verify_sig=yes
 set pgp_verify_command="gpg --no-verbose --batch --output - --verify %s %f"
 
+# store message headers locally to speed things up
+set header_cache = ~/.mutt/hcache
 
+# allow mutt to open new imap connection automatically
+set imap_passive = yes
+
+# keep imap connection alive by polling intermittently (time in seconds)
+set imap_keepalive = 300
+
+# how often to check for new mail (time in seconds)
+set mail_check = 120
